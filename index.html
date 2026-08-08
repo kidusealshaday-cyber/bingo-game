@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="am">
 <head>
     <meta charset="UTF-8">
@@ -64,13 +64,19 @@
         const tg = window.Telegram.WebApp;
         tg.expand(); // ገጹን ሙሉ ስክሪን እንዲያደርገው
 
-        // የቢንጎ ካርድ ማመንጫ (ከ1-75 ባሉት ቁጥሮች)
+        // የካርቴላ ቁጥሮች Range (ከ 1 እስከ 200 ተደርጓል)
+        const TOTAL_NUMBERS = 200; 
+
         function generateCard() {
             const grid = document.getElementById('bingoCard');
             grid.innerHTML = '';
-            let numbers = Array.from({length: 75}, (_, i) => i + 1).sort(() => 0.5 - Math.random()).slice(0, 25);
             
-            numbers.forEach((num, index) => {
+            // ከ1 እስከ 200 ባሉት ቁጥሮች ውስጥ 25ቱን በዘፈቀደ ይመርጣል
+            let numbers = Array.from({length: TOTAL_NUMBERS}, (_, i) => i + 1)
+                               .sort(() => 0.5 - Math.random())
+                               .slice(0, 25);
+            
+            numbers.forEach((num) => {
                 let cell = document.createElement('div');
                 cell.className = 'cell';
                 cell.innerText = num;
