@@ -1,95 +1,140 @@
 <!DOCTYPE html>
 <html lang="am">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bingo Game</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #1a1a2e;
-            color: white;
-            margin: 0;
-            padding: 20px;
-        }
-        h1 { color: #f1c40f; margin-bottom: 5px; }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 8px;
-            max-width: 320px;
-            margin: 20px auto;
-        }
-        .cell {
-            background-color: #16213e;
-            border: 2px solid #0f3460;
-            border-radius: 8px;
-            padding: 15px 0;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            user-select: none;
-        }
-        .cell.marked {
-            background-color: #e94560;
-            color: white;
-            border-color: #ff2e63;
-        }
-        .btn {
-            background-color: #27ae60;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            font-size: 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-top: 15px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Happy Bingo</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #1a1e29;
+      color: #ffffff;
+      text-align: center;
+      margin: 0;
+      padding: 15px;
+    }
+    h1 {
+      color: #f1c40f;
+      margin-bottom: 5px;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: #bdc3c7;
+      margin-bottom: 15px;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      max-width: 350px;
+      margin: 0 auto 15px auto;
+    }
+    .cell {
+      background-color: #2c3e50;
+      border: 2px solid #34495e;
+      border-radius: 8px;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s;
+    }
+    .cell.selected {
+      background-color: #e74c3c;
+      border-color: #c0392b;
+      transform: scale(0.95);
+    }
+    .cell.free {
+      background-color: #27ae60;
+      border-color: #2ecc71;
+    }
+    .btn {
+      background-color: #27ae60;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 20px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      width: 80%;
+      max-width: 250px;
+    }
+    .btn:active {
+      transform: scale(0.98);
+    }
+  </style>
 </head>
 <body>
 
-    <h1>🎯 BINGO 🎯</h1>
-    <p>የወጡትን ቁጥሮች በመጫን መስመር ለመሙላት ይሞክሩ!</p>
+  <h1>🎯 BINGO 🎯</h1>
+  <div class="subtitle">የወጡትን ቁጥሮች በመጫን መስመር ለመሙላት ይሞክሩ!</div>
 
-    <div class="grid" id="bingoCard"></div>
+  <div class="board" id="board"></div>
 
-    <button class="btn" onclick="checkBingo()">ቢንጎ (Bingo)!</button>
+  <button class="btn" onclick="checkBingo()">ቢንጎ (Bingo)!</button>
 
-    <script>
-        // Telegram WebApp ን ማስነሳት
-        const tg = window.Telegram.WebApp;
-        tg.expand(); // ገጹን ሙሉ ስክሪን እንዲያደርገው
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
 
-        // የካርቴላ ቁጥሮች Range (ከ 1 እስከ 200 ተደርጓል)
-        const TOTAL_NUMBERS = 200; 
+    // Generate random bingo board numbers (1-75 standard)
+    function generateBingoBoard() {
+      const board = document.getElementById('board');
+      board.innerHTML = '';
+      
+      const ranges = [
+        [1, 15],   // B
+        [16, 30],  // I
+        [31, 45],  // N
+        [46, 60],  // G
+        [61, 75]   // O
+      ];
 
-        function generateCard() {
-            const grid = document.getElementById('bingoCard');
-            grid.innerHTML = '';
-            
-            // ከ1 እስከ 200 ባሉት ቁጥሮች ውስጥ 25ቱን በዘፈቀደ ይመርጣል
-            let numbers = Array.from({length: TOTAL_NUMBERS}, (_, i) => i + 1)
-                               .sort(() => 0.5 - Math.random())
-                               .slice(0, 25);
-            
-            numbers.forEach((num) => {
-                let cell = document.createElement('div');
-                cell.className = 'cell';
-                cell.innerText = num;
-                cell.onclick = () => cell.classList.toggle('marked');
-                grid.appendChild(cell);
-            });
+      let columns = [];
+
+      for (let c = 0; c < 5; c++) {
+        let col = [];
+        let [min, max] = ranges[c];
+        while (col.length < 5) {
+          let num = Math.floor(Math.random() * (max - min + 1)) + min;
+          if (!col.includes(num)) col.push(num);
         }
+        columns.push(col);
+      }
 
-        function checkBingo() {
-            tg.showAlert("🎉 ቢንጎ ተጫንክ! የጨዋታው ማረጋገጫ በቦቱ በኩል እየተጣራ ነው...");
+      // Render 5x5 board
+      for (let row = 0; row < 5; row++) {
+        for (let col = 0; col < 5; col++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+
+          // Middle Free Space
+          if (row === 2 && col === 2) {
+            cell.innerText = 'FREE';
+            cell.classList.add('selected', 'free');
+          } else {
+            cell.innerText = columns[col][row];
+            cell.onclick = function() {
+              this.classList.toggle('selected');
+            };
+          }
+          board.appendChild(cell);
         }
+      }
+    }
 
-        generateCard();
-    </script>
+    function checkBingo() {
+      alert("🎉 ቢንጎ ለማየት ፍተሻ ተደርጓል!");
+    }
+
+    generateBingoBoard();
+  </script>
 </body>
 </html>
