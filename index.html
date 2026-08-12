@@ -12,42 +12,54 @@
       color: #ffffff;
       text-align: center;
       margin: 0;
-      padding: 15px;
+      padding: 10px;
     }
     h1 {
       color: #f1c40f;
-      margin-bottom: 5px;
+      margin: 5px 0;
+      font-size: 22px;
     }
-    .subtitle {
-      font-size: 14px;
+    .caller-box {
+      background: #2c3e50;
+      border: 2px solid #f1c40f;
+      border-radius: 12px;
+      padding: 10px;
+      margin: 10px auto;
+      max-width: 330px;
+    }
+    .current-number {
+      font-size: 32px;
+      font-weight: bold;
+      color: #e74c3c;
+    }
+    .history {
+      font-size: 12px;
       color: #bdc3c7;
-      margin-bottom: 15px;
+      margin-top: 5px;
     }
     .board {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 8px;
-      max-width: 350px;
-      margin: 0 auto 15px auto;
+      gap: 6px;
+      max-width: 330px;
+      margin: 10px auto;
     }
     .cell {
-      background-color: #2c3e50;
-      border: 2px solid #34495e;
-      border-radius: 8px;
+      background-color: #34495e;
+      border: 1px solid #4a6572;
+      border-radius: 6px;
       aspect-ratio: 1;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: bold;
       cursor: pointer;
       user-select: none;
-      transition: all 0.2s;
     }
     .cell.selected {
       background-color: #e74c3c;
       border-color: #c0392b;
-      transform: scale(0.95);
     }
     .cell.free {
       background-color: #27ae60;
@@ -57,24 +69,27 @@
       background-color: #27ae60;
       color: white;
       border: none;
-      padding: 12px 25px;
+      padding: 10px 20px;
       font-size: 16px;
       font-weight: bold;
       border-radius: 20px;
       cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
       width: 80%;
       max-width: 250px;
-    }
-    .btn:active {
-      transform: scale(0.98);
+      margin-top: 5px;
     }
   </style>
 </head>
 <body>
 
   <h1>🎯 BINGO 🎯</h1>
-  <div class="subtitle">የወጡትን ቁጥሮች በመጫን መስመር ለመሙላት ይሞክሩ!</div>
+
+  <!-- የቁጥር መጥሪያ ሳጥን -->
+  <div class="caller-box">
+    <div style="font-size: 12px; color: #aaa;">የወጣው ቁጥር (Current Call)</div>
+    <div class="current-number" id="currentCall">Waiting...</div>
+    <div class="history" id="callHistory">ያለፉት: -</div>
+  </div>
 
   <div class="board" id="board"></div>
 
@@ -84,21 +99,18 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // Generate random bingo board numbers (1-75 standard)
+    let drawnNumbers = [];
+    let allNumbers = Array.from({length: 75}, (_, i) => i + 1);
+
     function generateBingoBoard() {
       const board = document.getElementById('board');
       board.innerHTML = '';
       
       const ranges = [
-        [1, 15],   // B
-        [16, 30],  // I
-        [31, 45],  // N
-        [46, 60],  // G
-        [61, 75]   // O
+        [1, 15], [16, 30], [31, 45], [46, 60], [61, 75]
       ];
 
       let columns = [];
-
       for (let c = 0; c < 5; c++) {
         let col = [];
         let [min, max] = ranges[c];
@@ -109,13 +121,11 @@
         columns.push(col);
       }
 
-      // Render 5x5 board
       for (let row = 0; row < 5; row++) {
         for (let col = 0; col < 5; col++) {
           const cell = document.createElement('div');
           cell.className = 'cell';
 
-          // Middle Free Space
           if (row === 2 && col === 2) {
             cell.innerText = 'FREE';
             cell.classList.add('selected', 'free');
@@ -130,11 +140,34 @@
       }
     }
 
+    // በየ 3 ሰከንዱ ቁጥር መጥሪያ
+    function startCalling() {
+      setInterval(() => {
+        if (allNumbers.length === 0) return;
+        
+        let randomIndex = Math.floor(Math.random() * allNumbers.length);
+        let num = allNumbers.splice(randomIndex, 1)[0];
+        
+        let letter = '';
+        if (num <= 15) letter = 'B';
+        else if (num <= 30) letter = 'I';
+        else if (num <= 45) letter = 'N';
+        else if (num <= 60) letter = 'G';
+        else letter = 'O';
+
+        drawnNumbers.unshift(`${letter}-${num}`);
+        
+        document.getElementById('currentCall').innerText = `${letter}-${num}`;
+        document.getElementById('callHistory').innerText = "ያለፉት: " + drawnNumbers.slice(1, 6).join(', ');
+      }, 3000);
+    }
+
     function checkBingo() {
-      alert("🎉 ቢንጎ ለማየት ፍተሻ ተደርጓል!");
+      alert("🎉 ቢንጎ ተፈትሿል!");
     }
 
     generateBingoBoard();
+    startCalling();
   </script>
 </body>
 </html>
